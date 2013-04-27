@@ -1,6 +1,7 @@
 var fc = fc || {};
 
 // @TODO Error firing if browser doesn't support Canvas or File API
+// @TODO Minimum size support that carries over to crop.js
 $(document).ready(function() {
     var $INPUT = $('#fast-crop'),
         DEBUG = true,
@@ -27,9 +28,9 @@ $(document).ready(function() {
         },
 
         loadedImage: function () {
-            fc.crop.init(this);
             $(CANVAS).show();
             $(CANVAS_OVERLAY).show();
+            fc.crop.init(this);
         }
     };
 
