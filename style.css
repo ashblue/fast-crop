@@ -1,0 +1,10 @@
+input {
+    display: block;
+    margin-bottom: 20px;
+}
+
+canvas {
+    display: block;
+    outline: 1px solid #ccc;
+    margin: 0 0 20px 0;
+}
