@@ -1,6 +1,6 @@
 var fc = fc || {};
 
-// @TODO Error firing if browser doesn't support Canvas or File API
+// @TODO Needs extra padding to prevent issues on the edges
 $(document).ready(function() {
     var _dragCrop = false,
         _dragHandle = false,
@@ -181,6 +181,14 @@ $(document).ready(function() {
             // Overflow bottom
 
             // Overflow left
+        },
+
+        forceMinimum: function () {
+
+        },
+
+        forceRatio: function () {
+
         },
 
         nudgeLoc: function (x, y) {
