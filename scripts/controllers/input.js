@@ -30,7 +30,7 @@ $(document).ready(function() {
         loadedImage: function () {
             $(CANVAS).show();
             $(CANVAS_OVERLAY).show();
-            fc.crop.init(this);
+            fc.crop.init(this, parseInt($INPUT.data().minWidth, 10), parseInt($INPUT.data().minHeight, 10));
         }
     };
 

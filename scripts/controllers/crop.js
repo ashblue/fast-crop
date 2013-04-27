@@ -86,15 +86,19 @@ $(document).ready(function() {
         y: 0,
         width: 100,
         height: 100,
+        minWidth: null,
+        minHeight: null,
         handleSize: 10,
         img: null,
 
-        init: function (img) {
+        init: function (img, minWidth, minHeight) {
             var offset = $(canvas).offset();
             _offsetX = offset.left;
             _offsetY = offset.top;
 
             this.img = img;
+            this.minWidth = minWidth;
+            this.minHeight = minHeight;
             this.setSize(img.width, img.height);
             this.setArea(50, 50, 50, 50);
             this.bind();
@@ -120,7 +124,7 @@ $(document).ready(function() {
             ctx.drawImage(this.img, 0, 0);
 
             // Background
-            oCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            oCtx.fillStyle = 'rgba(0, 0, 0, 0.9)';
             oCtx.fillRect(0, 0, oCanvas.width, oCanvas.height);
 
             // Cut hole in background
