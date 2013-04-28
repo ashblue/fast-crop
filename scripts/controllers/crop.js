@@ -84,11 +84,12 @@ $(document).ready(function() {
     fc.crop = {
         x: 0,
         y: 0,
-        width: 100,
-        height: 100,
+        width: 10,
+        height: 10,
         minWidth: null,
         minHeight: null,
         handleSize: 10,
+        ratio: null,
         img: null,
 
         init: function (img, minWidth, minHeight) {
@@ -96,11 +97,13 @@ $(document).ready(function() {
             _offsetX = offset.left;
             _offsetY = offset.top;
 
+            this.x = this.y = this.width = this.height = 0;
             this.img = img;
             this.minWidth = minWidth;
             this.minHeight = minHeight;
+            this.ratio = minWidth / minHeight;
             this.setSize(img.width, img.height);
-            this.setArea(50, 50, 50, 50);
+            this.setArea(0, 0, minWidth, minHeight);
             this.bind();
         },
 
@@ -113,18 +116,19 @@ $(document).ready(function() {
         },
 
         setArea: function (x, y, width, height) {
-            this.x = x || this.x;
-            this.y = y || this.y;
-            this.width = width || this.width;
-            this.height = height || this.height;
+            // Verify crop is correct limitations
+            this.forceBoundary(x, y, width, height)
+                .forceMinimum()
+                .forceRatio();
 
+            // Exit during force boundary to prevent unecessary overflow
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             oCtx.clearRect(0, 0, canvas.width, canvas.height);
 
             ctx.drawImage(this.img, 0, 0);
 
             // Background
-            oCtx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            oCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             oCtx.fillRect(0, 0, oCanvas.width, oCanvas.height);
 
             // Cut hole in background
@@ -138,6 +142,8 @@ $(document).ready(function() {
             oCtx.fillRect(this.getHandleTopLeftX(), this.getHandleTopLeftY(), this.handleSize, this.handleSize);
 
             ctx.drawImage(oCanvas, 0, 0);
+
+            return this;
         },
 
         getHandleTopLeftX: function () {
@@ -177,34 +183,41 @@ $(document).ready(function() {
             return this;
         },
 
-        forceBoundary: function () {
-            // Overflow top
+        forceBoundary: function (x, y, width, height) {
+            if (x >= 0 && x + width <= canvas.width &&
+                y >= 0 && y + height <= canvas.height) {
+                this.x = x;
+                this.width = width;
+                this.y = y;
+                this.height = height;
+            }
 
-            // Overflow right
-
-            // Overflow bottom
-
-            // Overflow left
+            return this;
         },
 
         forceMinimum: function () {
+            if (this.width < this.minWidth) {
+                this.width = this.minWidth;
+            }
 
+            if (this.height < this.minHeight) {
+                this.height = this.minHeight;
+            }
+
+            return this;
         },
 
         forceRatio: function () {
-
+            this.height = this.width * this.ratio;
+            return this;
         },
 
         nudgeLoc: function (x, y) {
-            this.x += x;
-            this.y += y;
-            this.setArea();
+            this.setArea(this.x + x, this.y + y, this.width, this.height);
         },
 
         nudgeSize: function (width, height) {
-            this.width += width;
-            this.height += height;
-            this.setArea();
+            this.setArea(this.x, this.y, this.width + width, this.height + height);
         }
     };
 });
