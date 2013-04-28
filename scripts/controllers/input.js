@@ -34,6 +34,7 @@ $(document).ready(function() {
                 reader = new FileReader();
 
             reader.onload = function (e) {
+                // Double check that its a valid image
                 if (file.type.indexOf('image') !== -1) {
                     img.src = e.target.result;
                     img.onload = _event.loadedImage;
@@ -45,9 +46,18 @@ $(document).ready(function() {
         },
 
         loadedImage: function () {
-            $(CANVAS).show();
-            $(CANVAS_OVERLAY).show();
-            fc.crop.init(this, parseInt($INPUT.data().minWidth, 10), parseInt($INPUT.data().minHeight, 10));
+            var data = $INPUT.data();
+
+            // Check image size properties since they're available
+            if (this.width >= data.minWidth && this.height >= data.minHeight) {
+                $(CANVAS).show();
+                $(CANVAS_OVERLAY).show();
+                fc.crop.init(this, parseInt(data.minWidth, 10), parseInt(data.minHeight, 10));
+            } else {
+                alert('Sorry, but your image does not meet the minimum size requirements of ' +
+                    'width ' + data.minWidth + 'px and height ' + data.minHeight + 'px');
+                
+            }
         }
     };
 
