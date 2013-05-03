@@ -6,7 +6,6 @@ $(document).ready(function() {
 
     var $INPUT = $('#fast-crop'),
         DEBUG = true,
-        CANVAS = document.createElement('canvas'),
         CANVAS_OVERLAY = document.createElement('canvas');
 
     var _private = {
@@ -50,7 +49,6 @@ $(document).ready(function() {
 
             // Check image size properties since they're available
             if (this.width >= data.minWidth && this.height >= data.minHeight) {
-                $(CANVAS).show();
                 $(CANVAS_OVERLAY).show();
                 fc.crop.init(this, parseInt(data.minWidth, 10), parseInt(data.minHeight, 10));
             } else {
@@ -67,14 +65,12 @@ $(document).ready(function() {
                 _private.error();
             }
 
-            fc.crop.setCanvas(CANVAS)
+            fc.crop.setCanvas($INPUT)
                 .setCanvasOverlay(CANVAS_OVERLAY);
 
             if (DEBUG) {
                 $(CANVAS_OVERLAY).insertAfter($INPUT).hide();
             }
-
-            $(CANVAS).insertAfter($INPUT).hide();
 
             this.bind();
         },

@@ -2,12 +2,12 @@ var fc = fc || {};
 
 // @TODO Needs extra padding to prevent issues on the edges
 $(document).ready(function() {
+    var DEBUG = true;
+
     var _dragCrop = false,
         _dragHandle = false,
         _dragX,
-        _dragY,
-        _offsetX,
-        _offsetY;
+        _dragY;
 
     var canvas,
         ctx,
@@ -31,8 +31,9 @@ $(document).ready(function() {
 
     var _event = {
         hoverCursor: function (e) {
-            var x = e.pageX - _offsetX,
-                y = e.pageY - _offsetY;
+            var offset = $(this).offset(),
+                x = e.pageX - offset.left,
+                y = e.pageY - offset.top;
 
             if (fc.crop.getHandleOverlap(x, y)) {
                 $(this).css('cursor', 'nwse-resize');
@@ -44,8 +45,9 @@ $(document).ready(function() {
         },
 
         setSelect: function (e) {
-            var x = e.pageX - _offsetX,
-                y = e.pageY - _offsetY;
+            var offset = $(this).offset(),
+                x = e.pageX - offset.left,
+                y = e.pageY - offset.top;
 
             _dragX = x;
             _dragY = y;
@@ -57,15 +59,17 @@ $(document).ready(function() {
             }
         },
 
-        resetSelect: function () {
+        resetSelect: function (e) {
             _dragCrop = false;
             _dragHandle = false;
+            return false;
         },
 
         dragCrop: function (e) {
             if (_dragCrop) {
-                var x = e.pageX - _offsetX,
-                    y = e.pageY - _offsetY;
+                var offset = $(this).offset(),
+                    x = e.pageX - offset.left - e.data.padding,
+                    y = e.pageY - offset.top - e.data.padding;
 
                 fc.crop.nudgeLoc(_private.getDragX(x), _private.getDragY(y));
             }
@@ -73,8 +77,9 @@ $(document).ready(function() {
 
         dragHandle: function (e) {
             if (_dragHandle) {
-                var x = e.pageX - _offsetX,
-                    y = e.pageY - _offsetY;
+                var offset = $(this).offset(),
+                    x = e.pageX - offset.left - e.data.padding,
+                    y = e.pageY - offset.top - e.data.padding;
 
                 fc.crop.nudgeSize(_private.getDragX(x), _private.getDragY(y));
             }
@@ -91,12 +96,10 @@ $(document).ready(function() {
         handleSize: 10,
         ratio: null,
         img: null,
+        container: document.createElement('div'),
+        padding: 20,
 
         init: function (img, minWidth, minHeight) {
-            var offset = $(canvas).offset();
-            _offsetX = offset.left;
-            _offsetY = offset.top;
-
             this.x = this.y = this.width = this.height = 0;
             this.img = img;
             this.minWidth = minWidth;
@@ -110,9 +113,13 @@ $(document).ready(function() {
         bind: function () {
             $(canvas).mousemove(_event.hoverCursor)
                 .mousedown(_event.setSelect)
-                .mousemove(_event.dragCrop)
-                .mousemove(_event.dragHandle)
                 .mouseup(_event.resetSelect);
+
+
+            $(this.container)
+                .mousemove({ padding: this.padding }, _event.dragCrop)
+                .mousemove({ padding: this.padding }, _event.dragHandle)
+                .bind('mouseleave mouseup', _event.resetSelect);
         },
 
         setArea: function (x, y, width, height) {
@@ -171,9 +178,16 @@ $(document).ready(function() {
             oCanvas.height = height;
         },
 
-        setCanvas: function (el) {
-            canvas = el;
-            ctx = el.getContext('2d');
+        setCanvas: function ($start) {
+            canvas = document.createElement('canvas');
+            canvas.classList.add('fc-canvas');
+
+            ctx = canvas.getContext('2d');
+            this.container.style.padding = this.padding + 'px';
+            this.container.appendChild(canvas);
+            this.container.classList.add('fc-container');
+            $start.after(this.container);
+
             return this;
         },
 
@@ -218,6 +232,24 @@ $(document).ready(function() {
 
         nudgeSize: function (width, height) {
             this.setArea(this.x, this.y, this.width + width, this.height + height);
+        },
+
+        getImage: function () {
+            var newImage = document.createElement('canvas'),
+                newImageCtx = newImage.getContext('2d'),
+                dataurl;
+
+            // Draw cropped image onto a temporary Canvas
+            newImage.width = this.width;
+            newImage.height = this.height;
+            newImageCtx.drawImage(this.img, -this.x, -this.y);
+
+            if (DEBUG) {
+                $('body').append(newImage);
+            }
+
+            // Turn data into an image
+            return newImage.toDataURL('image/png');
         }
     };
 });
