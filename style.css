@@ -16,3 +16,7 @@ canvas {
 .fc-container {
     display: inline-block;
 }
+
+button {
+    display: block;
+}

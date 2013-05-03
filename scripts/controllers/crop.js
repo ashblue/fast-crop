@@ -98,6 +98,7 @@ $(document).ready(function() {
         img: null,
         container: document.createElement('div'),
         padding: 20,
+        $parent: null,
 
         init: function (img, minWidth, minHeight) {
             this.x = this.y = this.width = this.height = 0;
@@ -105,6 +106,9 @@ $(document).ready(function() {
             this.minWidth = minWidth;
             this.minHeight = minHeight;
             this.ratio = minWidth / minHeight;
+
+            this.$parent.after(this.container);
+
             this.setSize(img.width, img.height);
             this.setArea(0, 0, minWidth, minHeight);
             this.bind();
@@ -179,6 +183,7 @@ $(document).ready(function() {
         },
 
         setCanvas: function ($start) {
+            this.$parent = $start;
             canvas = document.createElement('canvas');
             canvas.classList.add('fc-canvas');
 
@@ -186,7 +191,6 @@ $(document).ready(function() {
             this.container.style.padding = this.padding + 'px';
             this.container.appendChild(canvas);
             this.container.classList.add('fc-container');
-            $start.after(this.container);
 
             return this;
         },
@@ -242,9 +246,10 @@ $(document).ready(function() {
                 dataurl;
 
             // Draw cropped image onto a temporary Canvas
-            newImage.width = this.width;
-            newImage.height = this.height;
-            newImageCtx.drawImage(this.img, -this.x, -this.y);
+            newImage.width = this.minWidth;
+            newImage.height = this.minHeight;
+//            newImageCtx.drawImage(this.img, -this.x, -this.y, this.img.width, this.img.height);
+            newImageCtx.drawImage(this.img, this.x, this.y, this.width, this.height, 0, 0, this.minWidth, this.minHeight);
 
             if (DEBUG) {
                 $('body').append(newImage);

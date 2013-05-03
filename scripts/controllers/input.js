@@ -49,7 +49,6 @@ $(document).ready(function() {
 
             // Check image size properties since they're available
             if (this.width >= data.minWidth && this.height >= data.minHeight) {
-                $(CANVAS_OVERLAY).show();
                 fc.crop.init(this, parseInt(data.minWidth, 10), parseInt(data.minHeight, 10));
             } else {
                 alert('Sorry, but your image does not meet the minimum size requirements of ' +
