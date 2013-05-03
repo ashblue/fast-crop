@@ -198,10 +198,12 @@ $(document).ready(function() {
         },
 
         forceBoundary: function (x, y, width, height) {
-            if (x >= 0 && x + width <= canvas.width &&
-                y >= 0 && y + height <= canvas.height) {
+            if (x >= 0 && x + width <= canvas.width) {
                 this.x = x;
                 this.width = width;
+            }
+
+            if (y >= 0 && y + height <= canvas.height) {
                 this.y = y;
                 this.height = height;
             }
