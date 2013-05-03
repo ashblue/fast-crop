@@ -5,9 +5,11 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <input data-min-width="50" data-min-height="50" id="fast-crop" type="file">
+    <input data-width="80" data-height="110" data-max-size="400" id="fast-crop" type="file">
 
     <button id="export">Crop Image</button>
+
+    <div id="crop-output"></div>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
     <script src="scripts/controllers/input.js"></script>

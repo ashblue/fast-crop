@@ -48,11 +48,11 @@ $(document).ready(function() {
             var data = $INPUT.data();
 
             // Check image size properties since they're available
-            if (this.width >= data.minWidth && this.height >= data.minHeight) {
-                fc.crop.init(this, parseInt(data.minWidth, 10), parseInt(data.minHeight, 10));
+            if (this.width >= data.width && this.height >= data.height) {
+                fc.crop.init(this, parseInt(data.width, 10), parseInt(data.height, 10), parseInt(data.maxSize, 10));
             } else {
                 alert('Sorry, but your image does not meet the minimum size requirements of ' +
-                    'width ' + data.minWidth + 'px and height ' + data.minHeight + 'px');
+                    'width ' + data.width + 'px and height ' + data.height + 'px');
                 
             }
         }

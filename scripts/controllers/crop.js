@@ -100,12 +100,15 @@ $(document).ready(function() {
         padding: 20,
         $parent: null,
 
-        init: function (img, minWidth, minHeight) {
+        init: function (img, minWidth, minHeight, maxSize) {
             this.x = this.y = this.width = this.height = 0;
             this.img = img;
             this.minWidth = minWidth;
             this.minHeight = minHeight;
+            this.maxSize = maxSize;
             this.ratio = minWidth / minHeight;
+//            this.ratio = minHeight / minWidth;
+
 
             this.$parent.after(this.container);
 
@@ -132,11 +135,10 @@ $(document).ready(function() {
                 .forceMinimum()
                 .forceRatio();
 
-            // Exit during force boundary to prevent unecessary overflow
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             oCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.drawImage(this.img, 0, 0);
+            ctx.drawImage(this.img, 0, 0, canvas.width, canvas.height);
 
             // Background
             oCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -176,10 +178,45 @@ $(document).ready(function() {
         },
 
         setSize: function (width, height) {
-            canvas.width = width;
-            canvas.height = height;
-            oCanvas.width = width;
-            oCanvas.height = height;
+            if (width > this.maxSize || height > this.maxSize) {
+                var resizedImage = this.getResizedImage();
+                this.width = resizedImage.width;
+                this.height = resizedImage.height;
+            } else {
+                this.width = width;
+                this.height = height;
+            }
+
+            canvas.width = this.width;
+            canvas.height = this.height;
+
+            oCanvas.width = this.width;
+            oCanvas.height = this.height;
+        },
+
+        // Resizes an overflowing image so it meets the maximum size setting
+        getResizedImage: function () {
+            var ratio,
+                width,
+                height;
+
+            // Width is the largest
+            if (this.img.width > this.img.height) {
+                ratio = this.img.height / this.img.width;
+                width = this.maxSize;
+                height = width * ratio;
+
+            // Height is the largest
+            } else {
+                ratio = this.img.width / this.img.height;
+                height = this.maxSize;
+                width = height * ratio;
+            }
+
+            return {
+                width: width,
+                height: height
+            };
         },
 
         setCanvas: function ($start) {
@@ -228,7 +265,7 @@ $(document).ready(function() {
         },
 
         forceRatio: function () {
-            this.height = this.width * this.ratio;
+            this.width = this.height * this.ratio;
             return this;
         },
 
@@ -243,20 +280,44 @@ $(document).ready(function() {
         getImage: function () {
             var newImage = document.createElement('canvas'),
                 newImageCtx = newImage.getContext('2d'),
-                dataurl;
+                crop = this.getCrop();
 
             // Draw cropped image onto a temporary Canvas
             newImage.width = this.minWidth;
             newImage.height = this.minHeight;
-//            newImageCtx.drawImage(this.img, -this.x, -this.y, this.img.width, this.img.height);
-            newImageCtx.drawImage(this.img, this.x, this.y, this.width, this.height, 0, 0, this.minWidth, this.minHeight);
+            newImageCtx.drawImage(this.img, crop.x, crop.y, crop.width, crop.height, 0, 0, this.minWidth, this.minHeight);
 
             if (DEBUG) {
-                $('body').append(newImage);
+                $('#crop-output').prepend(newImage);
             }
 
             // Turn data into an image
             return newImage.toDataURL('image/png');
+        },
+
+        getCrop: function () {
+            var x, y, width, height, ratio;
+
+            // If image is not oversized send back data as normal
+            if (this.img.width <= this.maxSize || this.img.height <= this.maxSize) {
+                x = this.x;
+                y = this.y;
+                width = this.width;
+                height = this.height;
+            } else {
+                ratio = this.img.width / this.maxSize;
+                x = this.x * ratio;
+                y = this.y * ratio;
+                width = this.width * ratio;
+                height = this.height * ratio;
+            }
+
+            return {
+                x: x,
+                y: y,
+                width: width,
+                height: height
+            }
         }
     };
 });
