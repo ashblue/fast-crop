@@ -1,8 +1,7 @@
 var fc = fc || {};
 
-// @TODO Needs extra padding to prevent issues on the edges
 $(document).ready(function() {
-    var DEBUG = true;
+    var DEBUG = false;
 
     var _dragCrop = false,
         _dragHandle = false,
@@ -97,7 +96,7 @@ $(document).ready(function() {
         ratio: null,
         img: null,
         container: document.createElement('div'),
-        padding: 20,
+        padding: 40,
         $parent: null,
 
         init: function (img, minWidth, minHeight, maxSize) {
@@ -132,8 +131,7 @@ $(document).ready(function() {
         setArea: function (x, y, width, height) {
             // Verify crop is correct limitations
             this.forceBoundary(x, y, width, height)
-                .forceMinimum()
-                .forceRatio();
+                .forceMinimum();
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             oCtx.clearRect(0, 0, canvas.width, canvas.height);
@@ -232,21 +230,40 @@ $(document).ready(function() {
             return this;
         },
 
-        setCanvasOverlay: function (el) {
-            oCanvas = el;
-            oCtx = el.getContext('2d');
+        setCanvasOverlay: function () {
+            oCanvas = document.createElement('canvas');
+            oCtx = oCanvas.getContext('2d');
+
+            if (DEBUG) {
+                $(oCanvas).insertAfter($(this.$parent));
+            }
+
             return this;
         },
 
+        // @TODO Two different methods, one for x/y and another for width/height
         forceBoundary: function (x, y, width, height) {
-            if (x >= 0 && x + width <= canvas.width) {
-                this.x = x;
-                this.width = width;
-            }
+            var prevHeight = this.height,
+                prevWidth = this.width;
 
-            if (y >= 0 && y + height <= canvas.height) {
-                this.y = y;
-                this.height = height;
+            // if a width change there must also be a height change
+            if (width !== this.width || height !== this.height) {
+                if (x >= 0 && x + width <= canvas.width &&
+                    y >= 0 && y + height <= canvas.height) {
+                    this.width = width;
+                    this.height = height;
+                    this.forceRatio(prevWidth, prevHeight);
+                }
+            } else {
+                // Set x
+                if (x >= 0 && x + width <= canvas.width) {
+                    this.x = x;
+                }
+
+                // Set y
+                if (y >= 0 && y + height <= canvas.height) {
+                    this.y = y;
+                }
             }
 
             return this;
@@ -264,8 +281,18 @@ $(document).ready(function() {
             return this;
         },
 
-        forceRatio: function () {
-            this.width = this.height * this.ratio;
+        // @TODO Method to dectect boundary violations
+        forceRatio: function (prevWidth, prevHeight) {
+            var newWidth = this.height * this.ratio;
+
+            // Verify new ratio doesn't exceed boundary
+            if (this.x + newWidth <= canvas.width) {
+                this.width = newWidth;
+            } else {
+                this.width = prevWidth;
+                this.height = prevHeight;
+            }
+
             return this;
         },
 
@@ -287,9 +314,8 @@ $(document).ready(function() {
             newImage.height = this.minHeight;
             newImageCtx.drawImage(this.img, crop.x, crop.y, crop.width, crop.height, 0, 0, this.minWidth, this.minHeight);
 
-            if (DEBUG) {
-                $('#crop-output').prepend(newImage);
-            }
+            // Pump out result into the crop area
+            $('#crop-output').prepend(newImage);
 
             // Turn data into an image
             return newImage.toDataURL('image/png');
@@ -299,13 +325,23 @@ $(document).ready(function() {
             var x, y, width, height, ratio;
 
             // If image is not oversized send back data as normal
-            if (this.img.width <= this.maxSize || this.img.height <= this.maxSize) {
+            if (this.img.width <= this.maxSize && this.img.height <= this.maxSize) {
                 x = this.x;
                 y = this.y;
                 width = this.width;
                 height = this.height;
-            } else {
+
+            // If height width is larger
+            } else if (this.img.width > this.img.height) {
                 ratio = this.img.width / this.maxSize;
+                x = this.x * ratio;
+                y = this.y * ratio;
+                width = this.width * ratio;
+                height = this.height * ratio;
+
+            // If width is larger
+            } else {
+                ratio = this.img.height / this.maxSize;
                 x = this.x * ratio;
                 y = this.y * ratio;
                 width = this.width * ratio;
