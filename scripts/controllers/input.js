@@ -1,8 +1,6 @@
 var fc = fc || {};
 
 $(document).ready(function() {
-
-//    var $INPUT = $('#fast-crop'),
     var $INPUT = $('.fast-crop'),
         DEBUG = false;
 
@@ -25,16 +23,29 @@ $(document).ready(function() {
     };
 
     var _event = {
-        setImage: function () {
+        // @TODO Logic here is a bit tangled, should be broken up
+        setImage: function (e) {
             var file = this.files[0],
                 img = document.createElement('img'),
-                reader = new FileReader();
+                reader = new FileReader(),
+                $input = $(this),
+                crop = e.data.crop;
 
             reader.onload = function (e) {
                 // Double check that its a valid image
                 if (file.type.indexOf('image') !== -1) {
                     img.src = e.target.result;
-                    img.onload = _event.loadedImage;
+                    img.onload = function () {
+                        var data = $input.data();
+
+                        // Check image size properties since they're available
+                        if (this.width >= data.width && this.height >= data.height) {
+                            crop.init(this, parseInt(data.width, 10), parseInt(data.height, 10), parseInt(data.maxSize, 10));
+                        } else {
+                            alert('Sorry, but your image does not meet the minimum size requirements of ' +
+                                'width ' + data.width + 'px and height ' + data.height + 'px');
+                        }
+                    };
                 } else {
                     alert('Uploaded file must be a valid image.');
                 }
@@ -42,39 +53,38 @@ $(document).ready(function() {
             reader.readAsDataURL(file);
         },
 
-        loadedImage: function () {
-            var data = $INPUT.data();
-
-            // Check image size properties since they're available
-            if (this.width >= data.width && this.height >= data.height) {
-                fc.crop.init(this, parseInt(data.width, 10), parseInt(data.height, 10), parseInt(data.maxSize, 10));
-            } else {
-                alert('Sorry, but your image does not meet the minimum size requirements of ' +
-                    'width ' + data.width + 'px and height ' + data.height + 'px');
-                
-            }
+        exportImage: function (e) {
+            e.data.crop.getImage();
         }
     };
 
+    /**
+     * Responsible for creating initial Fast Crop objects from inputs
+     * @type {{init: Function, bind: Function}}
+     */
     fc.input = {
         init: function () {
-            var canvas;
-
             if (!_private.featureDetection()) {
                 _private.error();
             }
 
+            var crop, $btn;
             $INPUT.each(function () {
-                fc.crop.setCanvas($(this))
+                crop = new fc.Crop();
+                $btn = $('<button>Crop Image</button>').insertAfter(this);
+
+                crop.setCanvas($(this))
                     .setCanvasOverlay();
 
+                fc.input.bind(this, crop, $btn);
             });
 
-            this.bind();
+
         },
 
-        bind: function () {
-            $INPUT.change(_event.setImage);
+        bind: function (input, target, $btn) {
+            $(input).change({ crop: target }, _event.setImage);
+            $btn.click({ crop: target }, _event.exportImage);
         }
     };
 });
